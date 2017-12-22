@@ -32,6 +32,7 @@ from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 from django.utils.six import with_metaclass
 import sys
+import uuid
 
 def _closure_model_unicode(self):
     """__unicode__ implementation for the dynamically created
@@ -47,6 +48,7 @@ def create_closure_model(cls):
     if getattr(cls._meta, 'db_table', None):
         meta_vals['db_table'] = '%sclosure' % getattr(cls._meta, 'db_table')
     model = type('%sClosure' % cls.__name__, (models.Model,), {
+        'id': models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False),
         'parent': models.ForeignKey(
             cls.__name__,
             related_name=cls.closure_parentref()
@@ -115,7 +117,7 @@ class ClosureModel(with_metaclass(ClosureModelBase, models.Model)):
                 # value, need to take a copy before it changes
                 self._closure_change_init()
         super(ClosureModel, self).__setattr__(name, value)
-
+    
     @classmethod
     def _toplevel(cls):
         """Find the top level of the chain we're in.
